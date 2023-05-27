@@ -524,35 +524,33 @@ CREATE PROCEDURE insertLocalidadedEnProvincia
 	GO
 
 
+
+IF EXISTS(SELECT [name] FROM sys.all_objects WHERE [name] = 'obtenerProvincia')
+    DROP FUNCTION obtenerProvincia
+GO
+CREATE FUNCTION obtenerProvincia(@provinciaNombre nvarchar(255)) RETURNS int 
+AS
+    BEGIN
+        DECLARE @provinciaNro int;
+        SELECT @provinciaNro = PROVINCIA_NRO FROM NEW_MODEL.PROVINCIA WHERE PROVINCIA_NOMBRE = @provinciaNombre;
+        RETURN @provinciaNro;
+    END
+GO
+
+
+
 IF EXISTS(SELECT [name] FROM sys.procedures WHERE [name] = 'MIGRAR_LOCALIDADES')
     DROP PROCEDURE MIGRAR_LOCALIDADES
 GO
 CREATE PROCEDURE MIGRAR_LOCALIDADES
 AS
     BEGIN
-        DECLARE @count INT;
-
-        CREATE TABLE #temp_provincias(
-            PROVINCIA_NRO int,
-            PROVINCIA_NOMBRE nvarchar(255) 
-        );
-
-        INSERT INTO #temp_provincias 
-        SELECT * FROM NEW_MODEL.PROVINCIA
-
-        SELECT @count = COUNT(*) FROM #temp_provincias;
-
-        WHILE @count > 0
-        BEGIN
-            DECLARE @ProvNro int = (SELECT TOP(1) PROVINCIA_NRO FROM #temp_provincias);
-            DECLARE @ProvNombre nvarchar(255) = (SELECT TOP(1) PROVINCIA_NOMBRE FROM #temp_provincias);
-            EXEC insertLocalidadedEnProvincia @ProvinciaNro = @ProvNro, @ProvinciaNombre = @ProvNombre
-
-            DELETE TOP (1) FROM #temp_provincias
-            SELECT @count = COUNT(*) FROM #temp_provincias;
-        END
-
-        DROP TABLE #temp_provincias;
+        INSERT INTO NEW_MODEL.LOCALIDAD(LOCALIDAD_PRIVINCIA_NRO, LOCALIDAD_NOMBRE)
+        SELECT DISTINCT dbo.obtenerProvincia(DIRECCION_USUARIO_PROVINCIA) AS LOCALIDAD_PROVINCIA_NRO, DIRECCION_USUARIO_LOCALIDAD AS LOCALIDAD_NOMBRE FROM gd_esquema.Maestra WHERE DIRECCION_USUARIO_LOCALIDAD IS NOT NULL
+        UNION
+        SELECT DISTINCT dbo.obtenerProvincia(ENVIO_MENSAJERIA_PROVINCIA) AS LOCALIDAD_PROVINCIA_NRO, ENVIO_MENSAJERIA_LOCALIDAD AS LOCALIDAD_NOMBRE FROM gd_esquema.Maestra WHERE ENVIO_MENSAJERIA_LOCALIDAD IS NOT NULL
+        UNION
+        SELECT DISTINCT dbo.obtenerProvincia(LOCAL_PROVINCIA), LOCAL_LOCALIDAD AS LOCALIDAD_NOMBRE FROM gd_esquema.Maestra WHERE LOCAL_LOCALIDAD IS NOT NULL;
     END
 GO
 
@@ -597,24 +595,67 @@ CREATE PROCEDURE MIGRAR_REPARTIDOR
 
 
 
+IF EXISTS(SELECT [name] FROM sys.procedures WHERE [name] = 'obtenerUsuarioNro')
+    DROP FUNCTION obtenerUsuarioNro
+GO
+
  CREATE FUNCTION obtenerUsuarioNro(@usuarioDni decimal(18,0)) RETURNS int
  AS
 	BEGIN
 		DECLARE @usuario_nro int;
-		SELECT @usuario_nro FROM NEW_MODEL.USUARIO WHERE USUARIO_DNI  = @usuarioDni;
+		SELECT @usuario_nro = USUARIO_NRO FROM NEW_MODEL.USUARIO WHERE USUARIO_DNI  = @usuarioDni AND USUARIO_NRO IS NOT NULL;
 		RETURN @usuario_nro;
 	END
 GO  
 
+IF EXISTS(SELECT [name] FROM sys.procedures WHERE [name] = 'obtenerLocalidadNRO')
+    DROP FUNCTION obtenerLocalidadNRO
+GO
+
+
+CREATE FUNCTION  obternerLocalidadNRO(@provincia nvarchar(255),@localidad nvarchar(255)) RETURNS int
+AS
+	BEGIN
+		DECLARE @localidad_nro int;
+		DECLARE @provincianro int;
+		SET @provincianro = dbo.obtenerProvincia(@provincia);
+		SELECT @localidad_nro = LOCALIDAD_NRO FROM NEW_MODEL.LOCALIDAD WHERE LOCALIDAD_PRIVINCIA_NRO = @provincianro AND @localidad = LOCALIDAD_NOMBRE AND LOCALIDAD_NRO IS NOT NULL;
+		RETURN @localidad_nro
+	END
+GO
+
+
+
+
+
+IF EXISTS(SELECT [name] FROM sys.procedures WHERE [name] = 'MIGRAR_DIRECCION_USUARIO')
+    DROP PROCEDURE MIGRAR_DIRECCION_USUARIO
+GO
  CREATE PROCEDURE MIGRAR_DIRECCION_USUARIO AS
  BEGIN
- 	INSERT INTO NEW_MODEL.(DIRECCION_USUARIO_NOMBRE,DIRECCION_USUARIO_DIRECCION)
- 	SELECT DIRECCION_USUARIO_NOMBRE,DIRECCION_USUARIO_DIRECCION, USUARIO_DNI FROM gd_esquema.Maestra
+ 	INSERT INTO NEW_MODEL.DIRECCION_USUARIO(DIRECCION_USUARIO_USUARIO_NRO,DIRECCION_USUARIO_LOCALIDAD_NRO,DIRECCION_USUARIO_NOMBRE,DIRECCION_USUARIO_DIRECCION)
+ 	SELECT dbo.obtenerUsuarioNro(USUARIO_DNI),dbo.obternerLocalidadNRO(DIRECCION_USUARIO_PROVINCIA,DIRECCION_USUARIO_LOCALIDAD),DIRECCION_USUARIO_NOMBRE,DIRECCION_USUARIO_DIRECCION FROM gd_esquema.Maestra
  	WHERE DIRECCION_USUARIO_DIRECCION IS NOT NULL
  END
  GO
 
+ ----------------------- TEST ----------------------------------
+
+ --SELECT * FROM NEW_MODEL.DIRECCION_USUARIO;
+ --SELECT * FROM NEW_MODEL.USUARIO;
+ --DROP FUNCTION dbo.obtenerUsuarioNro;
+ --DROP PROCEDURE dbo.MIGRAR_DIRECCION_USUARIO;
+ --exec dropear_tablas;
+ --exec MIGRAR_USUARIOS;
+ --EXEC MIGRAR_PROVINCIAS
+ --EXEC MIGRAR_LOCALIDADES
+ --exec MIGRAR_DIRECCION_USUARIO;
 -- CREATE PROCEDURE MIGRAR_PEDIDO_ENVIO AS
+
+
+----------------------- TEST -----------------------------------
+
+
 -- BEGIN
 -- 	INSERT INTO NEW_MODEL.PEDIDO_ENVIO(PEDIDO_ENVIO_PRECIO, PEDIDO_ENVIO_TARIFA_SERVICIO,PEDIDO_ENVIO_PROPINA)
 -- 	SELECT DISTINCT PEDIDO_PRECIO_ENVIO,PEDIDO_TARIFA_SERVICIO,PEDIDO_PROPINA FROM gd_esquema.Maestra
