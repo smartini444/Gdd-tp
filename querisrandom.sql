@@ -50,3 +50,4 @@ SELECT * FROM NEW_MODEL.[PRODUCTO]
 
 
 exec crear_tablas
+EXEC migrar_tablas

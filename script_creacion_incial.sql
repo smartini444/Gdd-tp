@@ -468,11 +468,11 @@ AS
 		RETURN @diaNro;
 	END
 GO
-----------------------------------------------------------------------------------------------------------------------------------------------------------
-IF OBJECT_ID('obternetRepartidorNro', 'FN') IS NOT NULL
-DROP FUNCTION obternetRepartidorNro;
+
+IF OBJECT_ID('obtenerRepartidorNro', 'FN') IS NOT NULL
+DROP FUNCTION obtenerRepartidorNro;
 GO
-CREATE FUNCTION obternetRepartidorNro(@repartidorDni decimal(18,0)) RETURNS int
+CREATE FUNCTION obtenerRepartidorNro(@repartidorDni decimal(18,0)) RETURNS int
 AS
 	BEGIN
 		DECLARE @repartidorNro int;
@@ -480,6 +480,7 @@ AS
 		RETURN @repartidorNro;
 	END
 GO
+
 IF OBJECT_ID('obtenerDireccionUsuarioNro', 'FN') IS NOT NULL
 DROP FUNCTION obtenerDireccionUsuarioNro;
 GO
@@ -492,7 +493,6 @@ AS
 	END
 GO
 
-----------------------------------------------------------------------------------------------------------------------------------------------------------
 -- CREACION DE PROCEDURESSS
 IF OBJECT_ID('MIGRAR_PROVINCIAS', 'P') IS NOT NULL
     DROP PROCEDURE MIGRAR_PROVINCIAS;
@@ -649,7 +649,7 @@ AS
         PRINT('PRODUCTO MIGRADAS')
     END
 GO
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 IF OBJECT_ID('MIGRAR_PEDIDO_ENVIO', 'P') IS NOT NULL
     DROP PROCEDURE MIGRAR_PEDIDO_ENVIO;
 GO
@@ -657,21 +657,12 @@ CREATE PROCEDURE MIGRAR_PEDIDO_ENVIO
 AS
 	BEGIN
 		INSERT INTO NEW_MODEL.PEDIDO_ENVIO(PEDIDO_ENVIO_REPARTIDOR_NRO,PEDIDO_ENVIO_DIRECCION_USUARIO_NRO,PEDIDO_ENVIO_PRECIO, PEDIDO_ENVIO_TARIFA_SERVICIO,PEDIDO_ENVIO_PROPINA)
-		SELECT dbo.obternetRepartidorNro(REPARTIDOR_DNI),dbo.obtenerDireccionUsuarioNro(DIRECCION_USUARIO_NOMBRE,DIRECCION_USUARIO_DIRECCION),PEDIDO_PRECIO_ENVIO,PEDIDO_TARIFA_SERVICIO,PEDIDO_PROPINA FROM gd_esquema.Maestra
+		SELECT dbo.obtenerRepartidorNro(REPARTIDOR_DNI),dbo.obtenerDireccionUsuarioNro(DIRECCION_USUARIO_NOMBRE,DIRECCION_USUARIO_DIRECCION),PEDIDO_PRECIO_ENVIO,PEDIDO_TARIFA_SERVICIO,PEDIDO_PROPINA FROM gd_esquema.Maestra
 		WHERE PEDIDO_PRECIO_ENVIO IS NOT NULL
+
+        PRINT('PEDIDO_ENVIO MIGRADAS')
 	END
 GO
---exec MIGRAR_USUARIOS ;
---exec MIGRAR_DIRECCION_USUARIO;
---exec MIGRAR_TIPO_MOVILIDAD;
---exec MIGRAR_PEDIDO_ENVIO;
---select distinct * from NEW_MODEL.PEDIDO_ENVIO;
---exec borrar_todo;
---exec crear_tablas
---exec migrar_tablas;
--- SELECT DISTINCT REPARTIDOR_DNI FROM gd_esquema.Maestra
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
 
  -- MIGRACION 
 IF EXISTS(SELECT [name] FROM sys.procedures WHERE [name] = 'migrar_tablas')
@@ -692,6 +683,7 @@ EXEC MIGRAR_LOCAL;
 EXEC MIGRAR_DIA;
 EXEC MIGRAR_HORARIO;
 EXEC MIGRAR_PRODUCTO;
+EXEC MIGRAR_PEDIDO_ENVIO;
 
 PRINT 'Tablas migradas correctamente.';
 COMMIT TRANSACTION
@@ -754,6 +746,9 @@ DROP PROCEDURE MIGRAR_HORARIO
 IF EXISTS(SELECT [name] FROM sys.procedures WHERE [name] = 'MIGRAR_PRODUCTO')
 DROP PROCEDURE MIGRAR_PRODUCTO
 
+IF EXISTS(SELECT [name] FROM sys.procedures WHERE [name] = 'MIGRAR_PEDIDO_ENVIO')
+DROP PROCEDURE MIGRAR_PEDIDO_ENVIO
+
 IF EXISTS(SELECT [name] FROM sys.procedures WHERE [name] = 'crear_tablas')
 DROP PROCEDURE crear_tablas
 
@@ -793,5 +788,12 @@ DROP FUNCTION obtenerLocalNro
 IF EXISTS(SELECT [name] FROM sys.all_objects WHERE [name] = 'obtenerDiaNro')
 DROP FUNCTION obtenerDiaNro
 
+IF EXISTS(SELECT [name] FROM sys.all_objects WHERE [name] = 'obtenerRepartidorNro')
+DROP FUNCTION obtenerRepartidorNro
+
+IF EXISTS(SELECT [name] FROM sys.all_objects WHERE [name] = 'obtenerDireccionUsuarioNro')
+DROP FUNCTION obtenerDireccionUsuarioNro
+
 END
 GO
+
