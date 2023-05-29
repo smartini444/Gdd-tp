@@ -417,7 +417,7 @@ AS
 		DECLARE @provincianro int;
 		SET @provincianro = dbo.obtenerProvincia(@provincia);
 		SELECT @localidad_nro = LOCALIDAD_NRO FROM NEW_MODEL.LOCALIDAD WHERE LOCALIDAD_PRIVINCIA_NRO = @provincianro AND @localidad = LOCALIDAD_NOMBRE AND LOCALIDAD_NRO IS NOT NULL;
-		RETURN @localidad_nro
+		RETURN @localidad_nro;
 	END
 GO
 
@@ -427,10 +427,9 @@ GO
 CREATE FUNCTION  obtenerCategoriaNro(@categoria nvarchar(50)) RETURNS int
 AS
 	BEGIN
-		DECLARE @ int;
 		DECLARE @categoriaNro int;
 		SELECT @categoriaNro = CATEGORIA_NRO FROM NEW_MODEL.CATEGORIA WHERE CATEGORIA_NOMBRE = @categoria;
-		RETURN @categoriaNro
+		RETURN @categoriaNro;
 	END
 GO
 
@@ -440,10 +439,33 @@ GO
 CREATE FUNCTION  obtenerTipoLocalNro(@tipoLocal nvarchar(50)) RETURNS int
 AS
 	BEGIN
-		DECLARE @ int;
 		DECLARE @tipoLocalNro int;
 		SELECT @tipoLocalNro = TIPO_LOCAL_NRO FROM NEW_MODEL.TIPO_LOCAL WHERE TIPO_LOCAL_NOMBRE = @tipoLocal;
-		RETURN @tipoLocalNro
+		RETURN @tipoLocalNro;
+	END
+GO
+
+IF OBJECT_ID('obtenerLocalNro', 'FN') IS NOT NULL
+DROP FUNCTION obtenerLocalNro;
+GO
+CREATE FUNCTION  obtenerLocalNro(@localNombre nvarchar(50), @localDireccion nvarchar(255)) RETURNS int
+AS
+	BEGIN
+		DECLARE @localNro int;
+		SELECT @localNro = TIPO_LOCAL_NRO FROM NEW_MODEL.LOCAL WHERE LOCAL_NOMBRE = @localNombre AND LOCAL_DIRECCION = @localDireccion;
+		RETURN @localNro;
+	END
+GO
+
+IF OBJECT_ID('obtenerDiaNro', 'FN') IS NOT NULL
+DROP FUNCTION obtenerDiaNro;
+GO
+CREATE FUNCTION  obtenerDiaNro(@diaNombre nvarchar(50)) RETURNS int
+AS
+	BEGIN
+		DECLARE @diaNro int;
+		SELECT @diaNro = DIA_NRO FROM NEW_MODEL.DIA WHERE DIA_NOMBRE = @diaNombre;
+		RETURN @diaNro;
 	END
 GO
 
@@ -576,6 +598,33 @@ AS
     END
 GO
 
+IF OBJECT_ID('MIGRAR_HORARIO', 'P') IS NOT NULL
+    DROP PROCEDURE MIGRAR_HORARIO;
+GO
+CREATE PROCEDURE MIGRAR_HORARIO 
+AS
+    BEGIN
+        INSERT INTO NEW_MODEL.HORARIO(HORARIO_LOCAL_NRO,HORARIO_LOCAL_DIA,HORARIO_LOCAL_HORA_APERTURA,HORARIO_LOCAL_HORA_CIERRE)
+        SELECT DISTINCT dbo.obtenerLocalNro(LOCAL_NOMBRE,LOCAL_DIRECCION), dbo.obtenerDia(HORARIO_LOCAL_DIA), HORARIO_LOCAL_HORA_APERTURA,HORARIO_LOCAL_HORA_CIERRE
+        FROM gd_esquema.Maestra
+
+        PRINT('HORARIO MIGRADAS')
+    END
+GO
+
+IF OBJECT_ID('MIGRAR_PRODUCTO', 'P') IS NOT NULL
+    DROP PROCEDURE MIGRAR_PRODUCTO;
+GO
+CREATE PROCEDURE MIGRAR_PRODUCTO 
+AS
+    BEGIN
+        INSERT INTO NEW_MODEL.PRODUCTO(PRODUCTO_NOMBRE,PRODUCTO_DESCRIPCION)
+        SELECT DISTINCT PRODUCTO_LOCAL_CODIGO PRODUCTO_LOCAL_NOMBRE, PRODUCTO_LOCAL_DESCRIPCION FROM gd_esquema.Maestra
+        WHERE PRODUCTO_LOCAL_CODIGO IS NOT NULL
+    END
+GO
+
+
  -- MIGRACION 
 IF EXISTS(SELECT [name] FROM sys.procedures WHERE [name] = 'migrar_tablas')
 DROP PROCEDURE migrar_tablas
@@ -593,6 +642,8 @@ EXEC MIGRAR_DIRECCION_USUARIO;
 EXEC MIGRAR_TIPO_LOCAL;
 EXEC MIGRAR_LOCAL;
 EXEC MIGRAR_DIA;
+EXEC MIGRAR_HORARIO;
+EXEC MIGRAR_PRODUCTO;
 
 PRINT 'Tablas migradas correctamente.';
 COMMIT TRANSACTION
@@ -649,6 +700,12 @@ DROP PROCEDURE MIGRAR_LOCAL
 IF EXISTS(SELECT [name] FROM sys.procedures WHERE [name] = 'MIGRAR_DIA')
 DROP PROCEDURE MIGRAR_DIA
 
+IF EXISTS(SELECT [name] FROM sys.procedures WHERE [name] = 'MIGRAR_HORARIO')
+DROP PROCEDURE MIGRAR_HORARIO
+
+IF EXISTS(SELECT [name] FROM sys.procedures WHERE [name] = 'MIGRAR_PRODUCTO')
+DROP PROCEDURE MIGRAR_PRODUCTO
+
 IF EXISTS(SELECT [name] FROM sys.procedures WHERE [name] = 'crear_tablas')
 DROP PROCEDURE crear_tablas
 
@@ -681,6 +738,12 @@ DROP FUNCTION obtenerCategoriaNro
 
 IF EXISTS(SELECT [name] FROM sys.all_objects WHERE [name] = 'obtenerTipoLocalNro')
 DROP FUNCTION obtenerTipoLocalNro
+
+IF EXISTS(SELECT [name] FROM sys.all_objects WHERE [name] = 'obtenerLocalNro')
+DROP FUNCTION obtenerLocalNro
+
+IF EXISTS(SELECT [name] FROM sys.all_objects WHERE [name] = 'obtenerDiaNro')
+DROP FUNCTION obtenerDiaNro
 
 END
 GO
