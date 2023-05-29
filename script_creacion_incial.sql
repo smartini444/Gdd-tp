@@ -107,7 +107,7 @@ BEGIN
         REPARTIDOR_DNI decimal(18, 0) NOT NULL UNIQUE,
         REPARTIDOR_TELEFONO decimal(18, 0) NOT NULL,
         REPARTIDOR_DIRECCION nvarchar(255) NOT NULL,
-        REPARTIDOR_EMAIL nvarchar(255) NOT NULL UNIQUE,
+        REPARTIDOR_EMAIL nvarchar(255) NOT NULL,
         REPARTIDOR_FECHA_NAC date NOT NULL,
     );
 
@@ -468,7 +468,31 @@ AS
 		RETURN @diaNro;
 	END
 GO
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+IF OBJECT_ID('obternetRepartidorNro', 'FN') IS NOT NULL
+DROP FUNCTION obternetRepartidorNro;
+GO
+CREATE FUNCTION obternetRepartidorNro(@repartidorDni decimal(18,0)) RETURNS int
+AS
+	BEGIN
+		DECLARE @repartidorNro int;
+		SELECT @repartidorNro = REPARTIDOR_NRO FROM NEW_MODEL.REPARTIDOR WHERE REPARTIDOR_DNI =  @repartidorDni;
+		RETURN @repartidorNro;
+	END
+GO
+IF OBJECT_ID('obtenerDireccionUsuarioNro', 'FN') IS NOT NULL
+DROP FUNCTION obtenerDireccionUsuarioNro;
+GO
+CREATE FUNCTION obtenerDireccionUsuarioNro(@direccionNombre nvarchar(50),@direccionDireccion nvarchar(255)) RETURNS int
+AS
+	BEGIN
+		DECLARE @direccionNro int;
+		SELECT @direccionNro = DIRECCION_USUARIO_NRO FROM NEW_MODEL.DIRECCION_USUARIO WHERE DIRECCION_USUARIO_NOMBRE =  @direccionNombre AND DIRECCION_USUARIO_DIRECCION = @direccionDireccion;
+		RETURN @direccionNro;
+	END
+GO
 
+----------------------------------------------------------------------------------------------------------------------------------------------------------
 -- CREACION DE PROCEDURESSS
 IF OBJECT_ID('MIGRAR_PROVINCIAS', 'P') IS NOT NULL
     DROP PROCEDURE MIGRAR_PROVINCIAS;
@@ -625,6 +649,28 @@ AS
         PRINT('PRODUCTO MIGRADAS')
     END
 GO
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+IF OBJECT_ID('MIGRAR_PEDIDO_ENVIO', 'P') IS NOT NULL
+    DROP PROCEDURE MIGRAR_PEDIDO_ENVIO;
+GO
+CREATE PROCEDURE MIGRAR_PEDIDO_ENVIO
+AS
+	BEGIN
+		INSERT INTO NEW_MODEL.PEDIDO_ENVIO(PEDIDO_ENVIO_REPARTIDOR_NRO,PEDIDO_ENVIO_DIRECCION_USUARIO_NRO,PEDIDO_ENVIO_PRECIO, PEDIDO_ENVIO_TARIFA_SERVICIO,PEDIDO_ENVIO_PROPINA)
+		SELECT dbo.obternetRepartidorNro(REPARTIDOR_DNI),dbo.obtenerDireccionUsuarioNro(DIRECCION_USUARIO_NOMBRE,DIRECCION_USUARIO_DIRECCION),PEDIDO_PRECIO_ENVIO,PEDIDO_TARIFA_SERVICIO,PEDIDO_PROPINA FROM gd_esquema.Maestra
+		WHERE PEDIDO_PRECIO_ENVIO IS NOT NULL
+	END
+GO
+--exec MIGRAR_USUARIOS ;
+--exec MIGRAR_DIRECCION_USUARIO;
+--exec MIGRAR_TIPO_MOVILIDAD;
+--exec MIGRAR_PEDIDO_ENVIO;
+--select distinct * from NEW_MODEL.PEDIDO_ENVIO;
+--exec borrar_todo;
+--exec crear_tablas
+--exec migrar_tablas;
+-- SELECT DISTINCT REPARTIDOR_DNI FROM gd_esquema.Maestra
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
  -- MIGRACION 
@@ -656,7 +702,7 @@ THROW 50001, 'No se migraron las tablas',1;
 END CATCH
 END
 GO
-
+--select distinct REPARTIDOR_DNI from gd_esquema.Maestra where REPARTIDOR_EMAIL = 'doyeljara@gmail.com';
 -- BORRAR TODO
 IF EXISTS(SELECT [name] FROM sys.procedures WHERE [name] = 'borrar_todo')
 DROP PROCEDURE borrar_todo
