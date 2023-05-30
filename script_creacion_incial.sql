@@ -115,7 +115,7 @@ BEGIN
     CREATE TABLE NEW_MODEL.ALTA(
         ALTA_REPARTIDOR_NRO int REFERENCES NEW_MODEL.REPARTIDOR,
         ALTA_LOCALIDAD_NRO int REFERENCES NEW_MODEL.LOCALIDAD,
-        ALTA_ACTIVA BIT NOT NULL,
+        ALTA_ACTIVA BIT NOT NULL DEFAULT 0,
         PRIMARY KEY(ALTA_REPARTIDOR_NRO,ALTA_LOCALIDAD_NRO)
     );
 
@@ -579,6 +579,72 @@ AS
     END
 GO
 
+IF OBJECT_ID('activarUltimaLocalidad', 'P') IS NOT NULL
+    DROP PROCEDURE activarUltimalocalidad;
+GO
+CREATE PROCEDURE activarUltimalocalidad(@repartidorDni decimal(18,0))
+AS
+	BEGIN
+		DECLARE @localidadNro int;
+        DECLARE @repartidorNro int;
+        SELECT TOP 1 @localidadNro = dbo.obtenerLocalidadNro(PROVINCIA, LOCALIDAD), @repartidorNro = dbo.obtenerRepartidorNro(REPARTIDOR_DNI) FROM
+        ( 
+            SELECT DISTINCT PEDIDO_NRO AS NRO_OP,LOCAL_PROVINCIA AS PROVINCIA, LOCAL_LOCALIDAD AS LOCALIDAD, REPARTIDOR_DNI, PEDIDO_FECHA AS FECHA FROM gd_esquema.Maestra WHERE PEDIDO_NRO IS NOT NULL
+            UNION 
+            SELECT DISTINCT ENVIO_MENSAJERIA_NRO AS NRO_OP, ENVIO_MENSAJERIA_PROVINCIA AS PROVINCIA, ENVIO_MENSAJERIA_LOCALIDAD AS LOCALIDAD, REPARTIDOR_DNI, ENVIO_MENSAJERIA_FECHA AS FECHA FROM gd_esquema.Maestra WHERE ENVIO_MENSAJERIA_NRO IS NOT NULL
+        ) T WHERE T.REPARTIDOR_DNI = @repartidorDni
+        ORDER BY FECHA DESC
+
+        UPDATE NEW_MODEL.ALTA
+        SET ALTA_ACTIVA = 1
+        WHERE ALTA_LOCALIDAD_NRO = @localidadNro AND ALTA_REPARTIDOR_NRO = @repartidorNro;
+	END
+GO
+
+
+IF OBJECT_ID('MIGRAR_ALTA', 'P') IS NOT NULL
+    DROP PROCEDURE MIGRAR_ALTA;
+GO
+CREATE PROCEDURE MIGRAR_ALTA
+AS
+	BEGIN
+		INSERT INTO NEW_MODEL.ALTA(ALTA_LOCALIDAD_NRO,ALTA_REPARTIDOR_NRO)
+            SELECT DISTINCT dbo.obtenerLocalidadNro(LOCAL_PROVINCIA,LOCAL_LOCALIDAD) AS ALTA_LOCALIDAD_NRO, dbo.obtenerRepartidorNro(REPARTIDOR_DNI) AS ALTA_REPARTIDOR_NRO FROM gd_esquema.Maestra WHERE PEDIDO_NRO IS NOT NULL
+            UNION
+            SELECT DISTINCT dbo.obtenerLocalidadNro(ENVIO_MENSAJERIA_PROVINCIA, ENVIO_MENSAJERIA_LOCALIDAD) AS ALTA_LOCALIDAD_NRO, dbo.obtenerRepartidorNro(REPARTIDOR_DNI) AS ALTA_REPARTIDOR_NRO FROM gd_esquema.Maestra WHERE ENVIO_MENSAJERIA_NRO IS NOT NULL
+        -- CADA SELECT DEL UNION ME ESTA DANDO LA COMBINACION DE DNI-LOCALIDAD POR DONDE ESTUVO EL REPARTIDOR, EL UNION ES PARA MEZCLAR LOS
+        -- PEDIDOS CON LOS ENVIOS_MENSAJERIA, HABRIA QUE VER SI ESTO NO ME PRODUCE DUPLICADOS, ME PARECE QUE NO, PERO CREO QUE ESTA LA POSIBILIDAD
+        -- NO SE SI HACIENDO UNS SELECT DISTINCT AL RESULTADO DE LA UNION LO ARREGLAMOS
+
+        -- Ahora vamos a settear como activa su ultima aparicion en una localidad
+        -- (Me gustria que ya tengamos los pedidos y envios en NEW.MODEL para no tener que recorrer la tabla maestra por cada DNI REPARTIDOR)
+        -- (Quise hacerlo de forma que no sea necesaria llamar a una funcion en el select de arriba para ahorrar procesamiento y habria q comprar si es mejor usar este cursos o hacer la funcion)
+            DECLARE @repartidorDni decimal(18,0);
+
+            -- Cursor para recorrer los resultados de la consulta
+            DECLARE cursorResultado CURSOR FOR
+            SELECT DISTINCT
+                REPARTIDOR_DNI
+            FROM
+                gd_esquema.Maestra
+            OPEN cursorResultado;
+            FETCH NEXT FROM cursorResultado INTO @repartidorDni;
+
+            -- Llamar al procedimiento activarUltimalocalidad para cada resultado del cursor
+            WHILE @@FETCH_STATUS = 0
+            BEGIN
+                EXEC activarUltimalocalidad @repartidorDni;
+
+                FETCH NEXT FROM cursorResultado INTO @repartidorDni;
+            END;
+
+            CLOSE cursorResultado;
+            DEALLOCATE cursorResultado;
+
+            PRINT('ALTA MIGRADAS')
+	END
+GO
+
 IF OBJECT_ID('MIGRAR_DIRECCION_USUARIO', 'P') IS NOT NULL
     DROP PROCEDURE MIGRAR_DIRECCION_USUARIO;
 GO
@@ -614,7 +680,7 @@ AS
         SELECT DISTINCT dbo.obtenerTipoLocalNro(LOCAL_TIPO),dbo.obtenerLocalidadNro(LOCAL_PROVINCIA,LOCAL_LOCALIDAD), LOCAL_NOMBRE, LOCAL_DESCRIPCION, LOCAL_DIRECCION
         FROM gd_esquema.Maestra
         WHERE LOCAL_NOMBRE IS NOT NULL
-
+        
         PRINT('LOCAL MIGRADAS')
     END
 GO
@@ -700,8 +766,6 @@ AS
         PRINT('LOCAL_PRODUCTO MIGRADAS')
 	END
 GO
-
-
  -- MIGRACION 
 IF EXISTS(SELECT [name] FROM sys.procedures WHERE [name] = 'migrar_tablas')
 DROP PROCEDURE migrar_tablas
@@ -715,6 +779,7 @@ EXEC MIGRAR_LOCALIDADES;
 EXEC MIGRAR_USUARIOS;
 EXEC MIGRAR_TIPO_MOVILIDAD;
 EXEC MIGRAR_REPARTIDOR;
+EXEC MIGRAR_ALTA;
 EXEC MIGRAR_DIRECCION_USUARIO;
 EXEC MIGRAR_TIPO_LOCAL;
 EXEC MIGRAR_LOCAL;
@@ -790,6 +855,12 @@ DROP PROCEDURE MIGRAR_PEDIDO_ENVIO
 
 IF EXISTS(SELECT [name] FROM sys.procedures WHERE [name] = 'MIGRAR_LOCAL_PRODUCTO')
 DROP PROCEDURE MIGRAR_LOCAL_PRODUCTO
+
+IF EXISTS(SELECT [name] FROM sys.procedures WHERE [name] = 'activarUltimaLocalidad')
+DROP PROCEDURE activarUltimaLocalidad
+
+IF EXISTS(SELECT [name] FROM sys.procedures WHERE [name] = 'MIGRAR_ALTA')
+DROP PROCEDURE MIGRAR_ALTA
 
 IF EXISTS(SELECT [name] FROM sys.procedures WHERE [name] = 'crear_tablas')
 DROP PROCEDURE crear_tablas
