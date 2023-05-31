@@ -143,5 +143,13 @@ SELECT DISTINCT
                 gd_esquema.Maestra
             WHER
 
-select distinct PAQUETE_TIPO ,PAQUETE_TIPO_PRECIO, PAQUETE_ALTO_MAX, PAQUETE_ANCHO_MAX, PAQUETE_LARGO_MAX from gd_esquema.Maestra
+select distinct ENVIO_MENSAJERIA_DIR_DEST, ENVIO_MENSAJERIA_DIR_ORIG, ENVIO_MENSAJERIA_LOCALIDAD from gd_esquema.Maestra
 
+CREATE FUNCTION obtenerEnvioPedido(@envioPrecio decimal(18,0), @envioTarifa decimal(18,0)) RETURNS int 
+AS
+    BEGIN
+        DECLARE @envioPedidoNro int;
+        SELECT @envioPedidoNro = PEDIDO_ENVIO_NRO FROM NEW_MODEL.PEDIDO_ENVIO WHERE PEDIDO_ENVIO_PRECIO = @envioPrecio  AND PEDIDO_ENVIO_TARIFA_SERVICIO = @envioTarifa ;
+        RETURN @envioPedidoNro;
+    END
+GO

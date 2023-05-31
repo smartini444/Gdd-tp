@@ -407,6 +407,8 @@ CREATE FUNCTION obtenerUsuarioNro(@usuarioDni decimal(18,0)) RETURNS int
 	END
 GO  
 
+
+
 IF OBJECT_ID('obtenerLocalidadNro', 'FN') IS NOT NULL
 DROP FUNCTION  obtenerLocalidadNro;
 GO
@@ -516,6 +518,20 @@ AS
 		RETURN @tipoNro;
 	END
 GO
+
+IF OBJECT_ID('obtenerLocalidadMensajeriaNro', 'FN') IS NOT NULL
+DROP FUNCTION obtenerLocalidadMensajeriaNro;
+GO
+
+CREATE FUNCTION obtenerLocalidadMensajeriaNro(@localidadMensajeria nvarchar(255)) RETURNS int
+As
+	BEGIN
+		DECLARE @localidadNro int;
+		SELECT @localidadNro = LOCALIDAD_NRO FROM NEW_MODEL.LOCALIDAD WHERE LOCALIDAD_NOMBRE = @localidadMensajeria;
+		RETURN @localidadNro;
+	END
+GO
+
 
 -- CREACION DE PROCEDURESSS
 IF OBJECT_ID('MIGRAR_PROVINCIAS', 'P') IS NOT NULL
@@ -798,18 +814,34 @@ END
 GO
 
 
+IF OBJECT_ID('MIGRAR_ENVIO_MENSAJERIA', 'P') IS NOT NULL
+    DROP PROCEDURE MIGRAR_ENVIO_MENSAJERIA;
+GO
 
 
----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+CREATE PROCEDURE MIGRAR_ENVIO_MENSAJERIA AS
+BEGIN
+	
+	INSERT INTO NEW_MODEL.ENVIO_MENSAJERIA(ENVIO_MENSAJERIA_LOCALIDAD_NRO,ENVIO_MENSAJERIA_DIR_ORIG,ENVIO_MENSAJERIA_DIR_DEST,ENVIO_MENSAJERIA_TIEMPO_ESTIMADO,ENVIO_MENSAJERIA_KM,ENVIO_MENSAJERIA_PRECIO_ENVIO,ENVIO_MENSAJERIA_PROPINA)
+	SELECT DISTINCT dbo.obtenerLocalidadMensajeriaNro(ENVIO_MENSAJERIA_LOCALIDAD), ENVIO_MENSAJERIA_DIR_ORIG,ENVIO_MENSAJERIA_DIR_DEST, ENVIO_MENSAJERIA_TIEMPO_ESTIMADO, ENVIO_MENSAJERIA_KM, ENVIO_MENSAJERIA_PRECIO_ENVIO, ENVIO_MENSAJERIA_PROPINA FROM gd_esquema.Maestra
+	WHERE ENVIO_MENSAJERIA_TIEMPO_ESTIMADO IS NOT NULL
+END
+GO
+
+
+-----------------------------------------------------------------------ZONA DE TESTEO DE SANTI, NO ME BORRES PLS----------------------------------------------------------------------------------------------
 --select * from gd_esquema.Maestra;
 --exec borrar_todo;
 --exec crear_tablas;
 --exec migrar_tablas;
---select * from new_model.PEDIDO_ENVIO order by PEDIDO_ENVIO_PRECIO;
+--select * from new_model.MENSAJERIA_ESTADO ;
 --select REPARTIDOR_NRO, REPARTIDOR_DNI from NEW_MODEL.REPARTIDOR order by REPARTIDOR_NRO;
 --select PEDIDO_NRO from NEW_MODEL.PEDIDO;
 
----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- IF OBJECT_ID('MIGRAR_PEDIDO', 'P') IS NOT NULL
 --     DROP PROCEDURE MIGRAR_PEDIDO;
 -- GO
@@ -821,6 +853,8 @@ GO
 --             WHERE PEDIDO_NRO IS NOT NULL
 --     END
 -- GO
+
+
 
 IF OBJECT_ID('MIGRAR_LOCAL_PRODUCTO', 'P') IS NOT NULL
     DROP PROCEDURE MIGRAR_LOCAL_PRODUCTO;
@@ -859,6 +893,7 @@ EXEC MIGRAR_LOCAL_PRODUCTO;
 EXEC MIGRAR_MENSAJERIA_ESTADO;
 EXEC MIGRAR_TIPO_PAQUETE;
 EXEC MIGRAR_PAQUETE;
+EXEC MIGRAR_ENVIO_MENSAJERIA;
 
 PRINT 'Tablas migradas correctamente.';
 COMMIT TRANSACTION
@@ -993,7 +1028,10 @@ DROP FUNCTION obtenerProductoNro
 IF EXISTS(SELECT [name] FROM sys.all_objects WHERE [name] = 'obtenerPaqueteNro')
 DROP FUNCTION obtenerPaqueteNro
 
+IF EXISTS(SELECT [name] FROM sys.all_objects WHERE [name] = 'LocalidadMensajeriaNro')
+DROP FUNCTION LocalidadMensajeriaNro
 
 PRINT ('TABLAS FUNCIONES Y PROCEDURES ELIMINADOS')
 END
 GO
+
