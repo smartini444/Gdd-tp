@@ -141,6 +141,7 @@ SELECT DISTINCT
                 dbo.obtenerRepartidorNro(REPARTIDOR_DNI) as REPARTIDOR_DNI
             FROM
                 gd_esquema.Maestra
-            WHERE
+            WHER
 
-exec borrar_todo
+select distinct PAQUETE_TIPO ,PAQUETE_TIPO_PRECIO, PAQUETE_ALTO_MAX, PAQUETE_ANCHO_MAX, PAQUETE_LARGO_MAX from gd_esquema.Maestra
+
