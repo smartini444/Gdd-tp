@@ -143,7 +143,7 @@ SELECT DISTINCT
                 gd_esquema.Maestra
             WHER
 
-select distinct MEDIO_PAGO_TIPO from gd_esquema.Maestra
+select distinct ENVIO_MENSAJERIA_ESTADO from gd_esquema.Maestra
 
 CREATE FUNCTION obtenerEnvioPedido(@envioPrecio decimal(18,0), @envioTarifa decimal(18,0)) RETURNS int 
 AS
@@ -153,3 +153,4 @@ AS
         RETURN @envioPedidoNro;
     END
 GO
+
