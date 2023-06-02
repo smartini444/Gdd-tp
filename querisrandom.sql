@@ -143,7 +143,7 @@ SELECT DISTINCT
                 gd_esquema.Maestra
             WHER
 
-select distinct ENVIO_MENSAJERIA_ESTADO from gd_esquema.Maestra
+select  PEDIDO_NRO,CUPON_NRO, RECLAMO_NRO from gd_esquema.Maestra where PEDIDO_NRO = 401 order by PEDIDO_NRO
 
 CREATE FUNCTION obtenerEnvioPedido(@envioPrecio decimal(18,0), @envioTarifa decimal(18,0)) RETURNS int 
 AS
@@ -154,3 +154,11 @@ AS
     END
 GO
 
+CREATE FUNCTION obtenerCuponNro(@pedidoNro decimal(18,0)) RETURNS int
+AS
+	BEGIN
+		DECLARE @nroCupon int;
+		SELECT @nroCupon = CUPON_NRO FROM NEW_MODEL.CUPON WHERE @pedidoNro = CUPON_PEDIDO_NRO AND CUPON_NRO IS NOT NULL
+		RETURN @nroCupon
+	END
+GO
