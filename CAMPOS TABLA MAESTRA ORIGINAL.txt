@@ -25,7 +25,6 @@
 	ENVIO_MENSAJERIA_CALIFICACION decimal(18, 0) NULL,          -- USADO
 	ENVIO_MENSAJERIA_ESTADO nvarchar(50) NULL,                  -- USADO
 
-
 	REPARTIDOR_NOMBRE nvarchar(255) NULL,           -- USADO
 	REPARTIDOR_APELLIDO nvarchar(255) NULL,         -- USADO
 	REPARTIDOR_DNI decimal(18, 0) NULL,             -- USADO
