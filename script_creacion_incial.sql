@@ -583,6 +583,7 @@ As
 	END
 GO
 
+
 IF OBJECT_ID('obtenerPaqueteNro', 'FN') IS NOT NULL
 DROP FUNCTION obtenerPaqueteNro;
 GO
@@ -595,6 +596,10 @@ AS
 	END
 GO
 
+
+IF OBJECT_ID('obtenerMensajeriaNro', 'FN') IS NOT NULL
+DROP FUNCTION obtenerMensajeriaNro;
+GO
 CREATE FUNCTION obtenerMensajeriaNro(@dirDest nvarchar(50),@tiempoEstimado decimal(18,2),@precioEnvio decimal(18,2)) RETURNS int
 AS
 	BEGIN
@@ -604,6 +609,9 @@ AS
 	END
 GO
 
+IF OBJECT_ID('obtenerEstadoNro', 'FN') IS NOT NULL
+DROP FUNCTION obtenerEstadoNro;
+GO
 CREATE FUNCTION obtenerEstadoNro(@estadoNombre nvarchar(50)) RETURNS int
 AS
 	BEGIN
@@ -613,6 +621,9 @@ AS
 	END
 GO
 
+IF OBJECT_ID('obtenerReclamoNro', 'FN') IS NOT NULL
+DROP FUNCTION obtenerReclamoNro;
+GO
 CREATE FUNCTION obtenerReclamoNro(@pedidoNro decimal(18,0)) RETURNS int
 AS
 	BEGIN
@@ -622,6 +633,9 @@ AS
 	END
 GO
 
+IF OBJECT_ID('obtenerCuponNro', 'FN') IS NOT NULL
+DROP FUNCTION obtenerCuponNro;
+GO
 CREATE FUNCTION obtenerCuponNro(@pedidoNro decimal(18,0)) RETURNS int
 AS
 	BEGIN
@@ -632,7 +646,9 @@ AS
 GO
 
 
-
+IF OBJECT_ID('obtenerTipoReclamo', 'FN') IS NOT NULL
+DROP FUNCTION obtenerTipoReclamo;
+GO
 CREATE FUNCTION obtenerTipoReclamo(@tipoNombre nvarchar(50)) RETURNS int
 AS
 	BEGIN
@@ -642,6 +658,9 @@ AS
 	END
 GO
 
+IF OBJECT_ID('obtenerEstadoReclamo', 'FN') IS NOT NULL
+DROP FUNCTION obtenerEstadoReclamo;
+GO
 CREATE FUNCTION obtenerEstadoReclamo(@estadoNombre nvarchar(50)) RETURNS int
 AS
 	BEGIN
@@ -651,6 +670,9 @@ AS
 	END
 GO
 
+IF OBJECT_ID('obtenerOperadorNro', 'FN') IS NOT NULL
+DROP FUNCTION obtenerOperadorNro;
+GO
 CREATE FUNCTION obtenerOperadorNro(@operadorDNI decimal(18,0)) RETURNS int
 AS
 	BEGIN
@@ -660,6 +682,9 @@ AS
 	END
 GO
 
+IF OBJECT_ID('obtenerCuponTipoNro', 'FN') IS NOT NULL
+DROP FUNCTION obtenerCuponTipoNro;
+GO
 CREATE FUNCTION obtenerCuponTipoNro(@tipoNombre nvarchar(50)) RETURNS int
 AS
 	BEGIN
@@ -1045,7 +1070,7 @@ CREATE PROCEDURE MIGRAR_PEDIDO
 AS
     BEGIN
             INSERT INTO NEW_MODEL.PEDIDO(PEDIDO_NRO, PEDIDO_ENVIO_NRO, PEDIDO_ESTADO_NRO, PEDIDO_USUARIO_NRO, PEDIDO_TOTAL_CUPONES, PEDIDO_TOTAL_SERVICIO, PEDIDO_TOTAL_PRODUCTOS, PEDIDO_CALIFICACION, PEDIDO_TIEMPO_ESTIMADO)
-            SELECT DISTINCT PEDIDO_NRO, dbo.obtenerPedidoEnvioNro(dbo.obtenerRepartidorNro(REPARTIDOR_DNI), CONVERT(datetime, PEDIDO_FECHA, 121)), dbo.obtenerPedidoEstadoNro(PEDIDO_ESTADO), dbo.obtenerUsuarioNro(USUARIO_DNI), PEDIDO_TOTAL_CUPONES, PEDIDO_TOTAL_SERVICIO, PEDIDO_TOTAL_PRODUCTOS, PEDIDO_CALIFICACION , PEDIDO_TIEMPO_ESTIMADO_ENTREGA FROM gd_esquema.Maestra
+            SELECT DISTINCT PEDIDO_NRO, dbo.obtenerPedidoEnvioNro(dbo.obtenerRepartidorNro(REPARTIDOR_DNI), CONVERT(datetime, PEDIDO_FECHA, 121)),dbo.obtenerPedidoEstadoNro(PEDIDO_ESTADO) ,dbo.obtenerUsuarioNro(USUARIO_DNI), PEDIDO_TOTAL_CUPONES, PEDIDO_TOTAL_SERVICIO, PEDIDO_TOTAL_PRODUCTOS, PEDIDO_CALIFICACION , PEDIDO_TIEMPO_ESTIMADO_ENTREGA FROM gd_esquema.Maestra
             WHERE PEDIDO_NRO IS NOT NULL
 
             SELECT DISTINCT PEDIDO_NRO, (REPARTIDOR_DNI), PEDIDO_FECHA, PEDIDO_ESTADO, (USUARIO_DNI), PEDIDO_TOTAL_CUPONES, PEDIDO_TOTAL_SERVICIO, PEDIDO_TOTAL_PRODUCTOS, PEDIDO_CALIFICACION , PEDIDO_TIEMPO_ESTIMADO_ENTREGA FROM gd_esquema.Maestra
@@ -1213,7 +1238,8 @@ GO
 --exec borrar_todo;
 --exec crear_tablas;
 --exec migrar_tablas;
---select * from new_model.MENSAJERIA_ESTADO ;
+--select * from new_model.PEDIDO ;
+
 --select REPARTIDOR_NRO, REPARTIDOR_DNI from NEW_MODEL.REPARTIDOR order by REPARTIDOR_NRO;
 --select PEDIDO_NRO from NEW_MODEL.PEDIDO;
 --SELECT * FROM NEW_MODEL.MEDIO_PAGO_TIPO
@@ -1222,6 +1248,8 @@ GO
 --DROP FUNCTION obtenerCuponNro
 --DROP FUNCTION obtenerReclamoNro
 
+create index REPNRO_FECHA
+on NEW_MODEL.PEDIDO_ENVIO (PEDIDO_ENVIO_REPARTIDOR_NRO, PEDIDO_ENVIO_FECHA);
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 IF OBJECT_ID('MIGRAR_LOCAL_PRODUCTO', 'P') IS NOT NULL
