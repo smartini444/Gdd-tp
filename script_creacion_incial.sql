@@ -839,16 +839,35 @@ AS
 
     -- Ahora vamos a settear como activa su ultima aparicion en una localidad
 
-        UPDATE tabla_alta
+        UPDATE NEW_MODEL.ALTA
         SET ALTA_ACTIVA = 1
-        FROM NEW_MODEL.ALTA tabla_alta
-        SELECT * FROM NEW_MODEL.ALTA tabla_alta
+        FROM NEW_MODEL.ALTA ACT
         JOIN (
-            SELECT ALTA_REPARTIDOR_NRO, MAX(ALTA_FECHA) AS max_fecha
-            FROM NEW_MODEL.ALTA
-            GROUP BY ALTA_REPARTIDOR_NRO
-        ) sub ON tabla_alta.ALTA_REPARTIDOR_NRO = sub.ALTA_REPARTIDOR_NRO AND tabla_alta.ALTA_FECHA = sub.max_fecha;
+            SELECT T.ALTA_LOCALIDAD_NRO, T.ALTA_REPARTIDOR_NRO, T.ALTA_FECHA, MAX_FECHA, ROW_NUMBER() OVER (PARTITION BY T.ALTA_REPARTIDOR_NRO, T.ALTA_FECHA, MAX_FECHA ORDER BY T.ALTA_REPARTIDOR_NRO) AS FILA
+            FROM NEW_MODEL.ALTA T
+            JOIN (
+                SELECT ALTA_REPARTIDOR_NRO, MAX(ALTA_FECHA) AS MAX_FECHA
+                FROM NEW_MODEL.ALTA
+                GROUP BY ALTA_REPARTIDOR_NRO
+            ) sub ON T.ALTA_REPARTIDOR_NRO = sub.ALTA_REPARTIDOR_NRO AND T.ALTA_FECHA = sub.MAX_FECHA
+        ) sub2 ON ACT.ALTA_REPARTIDOR_NRO = sub2.ALTA_REPARTIDOR_NRO  AND ACT.ALTA_LOCALIDAD_NRO = sub2.ALTA_LOCALIDAD_NRO where sub2.FILA = 1
 
+        -- SELECT *
+        -- FROM (
+        --     SELECT T.ALTA_LOCALIDAD_NRO, T.ALTA_REPARTIDOR_NRO, T.ALTA_FECHA, MAX_FECHA, ROW_NUMBER() OVER (PARTITION BY T.ALTA_REPARTIDOR_NRO, T.ALTA_FECHA, MAX_FECHA ORDER BY T.ALTA_REPARTIDOR_NRO) AS FILA
+        --     FROM NEW_MODEL.ALTA T
+        --     JOIN (
+        --         SELECT ALTA_REPARTIDOR_NRO, MAX(ALTA_FECHA) AS MAX_FECHA
+        --         FROM NEW_MODEL.ALTA
+        --         GROUP BY ALTA_REPARTIDOR_NRO
+        --     ) sub ON T.ALTA_REPARTIDOR_NRO = sub.ALTA_REPARTIDOR_NRO AND T.ALTA_FECHA = sub.MAX_FECHA
+        -- ) subquery
+        -- WHERE FILA = 1;
+        
+        
+        -- update NEW_MODEL.ALTA 
+        -- SET ALTA_ACTIVA = 0 WHERE ALTA_ACTIVA = 1
+        -- select * from NEW_MODEL.ALTA where ALTA_ACTIVA = 1 order by ALTA_REPARTIDOR_NRO, alta_fecha desc 
         PRINT('ALTA MIGRADAS')
 	END
 GO
