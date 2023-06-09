@@ -118,6 +118,7 @@ EXEC borrar_todo
 SELECT DISTINCT PEDIDO_NRO, MEDIO_PAGO_TIPO,MARCA_TARJETA,MEDIO_PAGO_NRO_TARJETA FROM gd_esquema.Maestra WHERE PEDIDO_NRO IS NOT NULL
 
 SELECT DISTINCT
+<<<<<<< HEAD
             PEDIDO_NRO,
             dbo.obtenerMedioPagoTipoNro(MEDIO_PAGO_TIPO),
         CASE
@@ -174,3 +175,29 @@ SELECT DISTINCT PEDIDO_NRO,PEDIDO_FECHA, PEDIDO_TOTAL_CUPONES, PEDIDO_TOTAL_SERV
 WHERE PEDIDO_NRO IS NOT NULL AND REPARTIDOR_DNI = 82881808 AND PEDIDO_FECHA = CONVERT(datetime, '2023-02-10 14:00:00.087', 121) ORDER BY PEDIDO_FECHA
 
 
+=======
+                dbo.obtenerRepartidorNro(REPARTIDOR_DNI) as REPARTIDOR_DNI
+            FROM
+                gd_esquema.Maestra
+            WHER
+
+select  PEDIDO_NRO,CUPON_NRO, RECLAMO_NRO from gd_esquema.Maestra where PEDIDO_NRO = 401 order by PEDIDO_NRO
+
+CREATE FUNCTION obtenerEnvioPedido(@envioPrecio decimal(18,0), @envioTarifa decimal(18,0)) RETURNS int 
+AS
+    BEGIN
+        DECLARE @envioPedidoNro int;
+        SELECT @envioPedidoNro = PEDIDO_ENVIO_NRO FROM NEW_MODEL.PEDIDO_ENVIO WHERE PEDIDO_ENVIO_PRECIO = @envioPrecio  AND PEDIDO_ENVIO_TARIFA_SERVICIO = @envioTarifa ;
+        RETURN @envioPedidoNro;
+    END
+GO
+
+CREATE FUNCTION obtenerCuponNro(@pedidoNro decimal(18,0)) RETURNS int
+AS
+	BEGIN
+		DECLARE @nroCupon int;
+		SELECT @nroCupon = CUPON_NRO FROM NEW_MODEL.CUPON WHERE @pedidoNro = CUPON_PEDIDO_NRO AND CUPON_NRO IS NOT NULL
+		RETURN @nroCupon
+	END
+GO
+>>>>>>> a1fc2fe089e4f693901fdcfe1f53a8199dd0d83d
