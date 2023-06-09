@@ -86,5 +86,99 @@ select * from gd_esquema.Maestra WHERE pedido_nro = 61254
         ORDER BY PEDIDO_NRO
 
         SELECT * FROM gd_esquema.Maestra WHERE PEDIDO_NRO IS NOT NULL ORDER BY PEDIDO_NRO
-        print(NULL +4+1)
 
+        SELECT * FROM NEW_MODEL.LOCAL_PRODUCTO
+
+        SELECT * FROM NEW_MODEL.ITEM ORDER BY ITEM_PEDIDO_NRO
+
+        BORRA
+
+ SELECT DISTINCT dbo.obtenerLocalidadNro(LOCAL_PROVINCIA,LOCAL_LOCALIDAD) AS ALTA_LOCALIDAD_NRO, dbo.obtenerRepartidorNro(REPARTIDOR_DNI) AS ALTA_REPARTIDOR_NRO FROM gd_esquema.Maestra WHERE PEDIDO_NRO IS NOT NULL
+        UNION
+        SELECT DISTINCT dbo.obtenerLocalidadNro(ENVIO_MENSAJERIA_PROVINCIA, ENVIO_MENSAJERIA_LOCALIDAD) AS ALTA_LOCALIDAD_NRO, dbo.obtenerRepartidorNro(REPARTIDOR_DNI) AS ALTA_REPARTIDOR_NRO FROM gd_esquema.Maestra WHERE ENVIO_MENSAJERIA_NRO IS NOT NULL
+
+
+                SELECT 
+                    T.PROVINCIA,
+                    T.LOCALIDAD, 
+                    T.REPARTIDOR_DNI,
+                    MAX(T.PEDIDO_FECHA)
+                FROM (
+                    SELECT DISTINCT
+                        LOCAL_PROVINCIA AS PROVINCIA,
+                        LOCAL_LOCALIDAD AS LOCALIDAD, 
+                        REPARTIDOR_DNI AS REPARTIDOR_DNI,
+                        PEDIDO_FECHA AS PEDIDO_FECHA
+                    FROM gd_esquema.Maestra WHERE PEDIDO_NRO IS NOT NULL
+                    UNION
+                    SELECT DISTINCT
+                        ENVIO_MENSAJERIA_PROVINCIA AS PROVINCIA,
+                        ENVIO_MENSAJERIA_LOCALIDAD AS LOCALIDAD, 
+                        REPARTIDOR_DNI AS REPARTIDOR_DNI,
+                        ENVIO_MENSAJERIA_FECHA AS PEDIDO_FECHA
+                    FROM gd_esquema.Maestra WHERE ENVIO_MENSAJERIA_NRO IS NOT NULL
+                ) T
+                GROUP BY
+                    T.PROVINCIA,
+                    T.LOCALIDAD, 
+                    T.REPARTIDOR_DNI
+                ORDER BY REPARTIDOR_DNI
+
+                borrar_todo
+                crear_tablas
+                migrar_tablas
+                mostrar_funciones
+                mostrar_procedures
+
+
+                SELECT * FROM NEW_MODEL.ALTA WHERE ALTA_ACTIVA = 1;
+
+                UPDATE NEW_MODEL.ALTA SET ALTA_ACTIVA = 1
+                WHERE (ALTA_REPARTIDOR_NRO, ALTA_FECHA) IN (SELECT TOP 1 sub.ALTA_REPARTIDOR_NRO, sub.ALTA_FECHA FROM NEW_MODEL.ALTA sub WHERE sub.ALTA_REPARTIDOR_NRO = ALTA_REPARTIDOR_NRO ORDER BY SUB.ALTA_FECHA DESC)  
+
+                UPDATE NEW_MODEL.ALTA
+                SET ALTA = 1
+                WHERE (ALTA_REPARTIDOR_NRO, ALTA_FECHA) IN (
+                    SELECT ALTA_REPARTIDOR_NRO, MAX(ALTA_FECHA)
+                    FROM NEW_MODEL.ALTA
+                    GROUP BY ALTA_REPARTIDOR_NRO
+                );
+
+                UPDATE t1
+                SET t1.ALTA_ACTIVA = 0
+                FROM NEW_MODEL.ALTA t1
+                INNER JOIN (
+                    SELECT ALTA_REPARTIDOR_NRO, MIN(ALTA_FECHA) AS MAX_FECHA
+                    FROM NEW_MODEL.ALTA
+                    GROUP BY ALTA_REPARTIDOR_NRO
+                ) t2 ON t1.ALTA_REPARTIDOR_NRO = t2.ALTA_REPARTIDOR_NRO AND t1.ALTA_FECHA = t2.MAX_FECHA;
+
+                UPDATE tabla_alta
+                SET ALTA_ACTIVA = 1
+                FROM NEW_MODEL.ALTA tabla_alta
+                SELECT * FROM NEW_MODEL.ALTA tabla_alta
+                JOIN (
+                    SELECT ALTA_REPARTIDOR_NRO, MAX(ALTA_FECHA) AS max_fecha
+                    FROM NEW_MODEL.ALTA
+                    GROUP BY ALTA_REPARTIDOR_NRO
+                ) sub ON tabla_alta.ALTA_REPARTIDOR_NRO = sub.ALTA_REPARTIDOR_NRO AND tabla_alta.ALTA_FECHA = sub.max_fecha;
+
+                SELECT ALTA_REPARTIDOR_NRO, ALTA_FECHA, COUNT(*) AS CANT FROM NEW_MODEL.ALTA
+                GROUP BY ALTA_REPARTIDOR_NRO,ALTA_FECHA 
+                HAVING COUNT(*)>1
+
+
+
+
+                SELECT * FROM NEW_MODEL.ALTA WHERE ALTA_ACTIVA = 1 ORDER BY ALTA_REPARTIDOR_NRO, ALTA_FECHA
+
+                update NEW_MODEL.ALTA 
+                SET ALTA_ACTIVA = 0 WHERE ALTA_ACTIVA = 1
+
+
+                SELECT DISTINCT ALTA_REPARTIDOR_NRO FROM NEW_MODEL.ALTA ORDER BY ALTA_REPARTIDOR_NRO, ALTA_FECHA DESC
+
+                SELECT * FROM NEW_MODEL.ALTA ORDER BY ALTA_REPARTIDOR_NRO, ALTA_FECHA DESC
+
+
+                SELECT TOP 1 * FROM NEW_MODEL.ALTA sub WHERE sub.ALTA_REPARTIDOR_NRO = ALTA_REPARTIDOR_NRO ORDER BY SUB.ALTA_FECHA DESC
