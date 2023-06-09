@@ -272,3 +272,57 @@ FROM gd_esquema.Maestra t WHERE PEDIDO_NRO IS NOT NULL
 SELECT DISTINCT t.LOCAL_LOCALIDAD , t.REPARTIDOR_DNI, 0, t.PEDIDO_FECHA
 FROM gd_esquema.Maestra t WHERE PEDIDO_NRO IS NOT NULL
 
+SELECT DISTINCT * FROM (
+                    SELECT DISTINCT
+                    PEDIDO_NRO,
+                    NULL,
+                    dbo.obtenerMedioPagoNro(MEDIO_PAGO_TIPO),
+                    CASE
+                        WHEN MEDIO_PAGO_TIPO = 'Efectivo' THEN NULL
+                        ELSE dbo.obtenerTarjetaNro(dbo.obtenerMarcaTarjetaNro(MARCA_TARJETA),MEDIO_PAGO_NRO_TARJETA)
+                    END
+                    FROM gd_esquema.Maestra
+                    WHERE PEDIDO_NRO IS NOT NULL) t
+
+                    borrar_todo
+                    crear_tablas
+                    migrar_tablas
+
+                    mostrar_funciones
+                    mostrar_procedures
+
+
+select * from new_model.PEDIDO
+
+SELECT * FROM NEW_MODEL.LOCAL_PRODUCTO
+select * from gd_esquema.Maestra WHERE pedido_nro = 61254
+
+
+		SELECT DISTINCT 
+        LOCAL_NOMBRE,
+        LOCAL_DIRECCION, 
+        PRODUCTO_LOCAL_CODIGO,
+        PEDIDO_NRO,
+        SUM(PRODUCTO_CANTIDAD) as PRODUCTO_CANTIDAD,
+        PRODUCTO_LOCAL_PRECIO
+        FROM gd_esquema.Maestra where PEDIDO_NRO IS NOT NULL AND PRODUCTO_LOCAL_CODIGO IS NOT NULL
+        GROUP BY 
+        LOCAL_NOMBRE,
+        LOCAL_DIRECCION,
+        PRODUCTO_LOCAL_CODIGO,
+        PRODUCTO_LOCAL_PRECIO,
+        PEDIDO_NRO
+        ORDER BY PEDIDO_NRO
+
+        SELECT DISTINCT 
+        LOCAL_NOMBRE,
+        LOCAL_DIRECCION, 
+        PRODUCTO_LOCAL_CODIGO, 
+        PEDIDO_NRO,
+        PRODUCTO_LOCAL_PRECIO,
+        PRODUCTO_CANTIDAD
+        FROM gd_esquema.Maestra where PEDIDO_NRO IS NOT NULL AND PRODUCTO_LOCAL_CODIGO IS NOT NULL 
+        ORDER BY PEDIDO_NRO
+
+        SELECT * FROM gd_esquema.Maestra WHERE PEDIDO_NRO IS NOT NULL ORDER BY PEDIDO_NRO
+        print(NULL +4+1)
