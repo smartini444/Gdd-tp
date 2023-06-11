@@ -13,9 +13,6 @@ EXEC borrar_todo
 exec crear_tablas
 exec migrar_tablas
 
-EXEC crear_tablas
-exec migrar_tablas
-
 
 SELECT DISTINCT LOCAL_NOMBRE, LOCAL_DIRECCION PRODUCTO_LOCAL_CODIGO FROM gd_esquema.Maestra where PRODUCTO_LOCAL_CODIGO IS NOT NULL 
 ORDER BY LOCAL_NOMBRE
@@ -182,3 +179,115 @@ select * from gd_esquema.Maestra WHERE pedido_nro = 61254
 
 
                 SELECT TOP 1 * FROM NEW_MODEL.ALTA sub WHERE sub.ALTA_REPARTIDOR_NRO = ALTA_REPARTIDOR_NRO ORDER BY SUB.ALTA_FECHA DESC
+
+              select * from NEW_MODEL.ALTA
+
+              BORRAR_TODO
+              limpiar_cache
+              crear_tablas
+              mostrar_funciones
+              mostrar_procedures
+
+              SELECT * FROM NEW_MODEL.TARJETA
+               SELECT * FROM NEW_MODEL.MEDIO_PAGO
+
+
+              SELECT * FROM NEW_MODEL.LOCALIDAD
+
+	SELECT DISTINCT RECLAMO_NRO,(USUARIO_DNI),PEDIDO_NRO,(RECLAMO_TIPO),(RECLAMO_ESTADO),(OPERADOR_RECLAMO_DNI),RECLAMO_FECHA,RECLAMO_DESCRIPCION,RECLAMO_FECHA_SOLUCION ,RECLAMO_SOLUCION,RECLAMO_CALIFICACION  FROM gd_esquema.Maestra
+	WHERE RECLAMO_NRO IS NOT NULL
+
+    SELECT DISTINCT CUPON_NRO,dbo.obtenerUsuarioNro(USUARIO_DNI),PEDIDO_NRO,dbo.obtenerCuponTipoNro(CUPON_TIPO),CUPON_MONTO,CUPON_FECHA_ALTA,CUPON_FECHA_VENCIMIENTO FROM gd_esquema.Maestra
+	WHERE CUPON_NRO IS NOT NULL
+
+SELECT DISTINCT * FROM 
+                    (
+                    SELECT CUPON_NRO FROM gd_esquema.Maestra WHERE CUPON_NRO IS NOT NULL
+                    UNION
+                    SELECT CUPON_RECLAMO_NRO FROM gd_esquema.Maestra WHERE CUPON_RECLAMO_NRO IS NOT NULL
+                    ) y
+
+
+	SELECT DISTINCT CUPON_TIPO FROM gd_esquema.Maestra
+	WHERE CUPON_TIPO IS NOT NULL
+    UNION
+    SELECT DISTINCT CUPON_RECLAMO_TIPO FROM gd_esquema.Maestra
+	WHERE CUPON_RECLAMO_TIPO IS NOT NULL
+
+	SELECT DISTINCT OPERADOR_RECLAMO_NOMBRE ,OPERADOR_RECLAMO_APELLIDO ,OPERADOR_RECLAMO_DNI ,OPERADOR_RECLAMO_TELEFONO ,OPERADOR_RECLAMO_DIRECCION ,OPERADOR_RECLAMO_MAIL ,OPERADOR_RECLAMO_FECHA_NAC FROM gd_esquema.Maestra
+	WHERE OPERADOR_RECLAMO_DNI IS NOT NULL order by OPERADOR_RECLAMO_DNI
+
+    SELECT OPERADOR_RECLAMO_DNI, COUNT(*) AS CANT FROM gd_esquema.Maestra GROUP BY OPERADOR_RECLAMO_DNI
+    HAVING COUNT(*) >1
+
+    SELECT * FROM gd_esquema.Maestra WHERE OPERADOR_RECLAMO_DNI = 4170422
+    SELECT * FROM gd_esquema.Maestra WHERE OPERADOR_RECLAMO_MAIL = 'dayraledesma@gmail.com'
+
+    SELECT OPERADOR_RECLAMO_MAIL, COUNT(*) AS CANT FROM gd_esquema.Maestra GROUP BY OPERADOR_RECLAMO_MAIL
+    HAVING COUNT(*) >1
+
+    dni 4170422 MISMO DNI DISTINTO NOM APE
+    mail abielbravo@gmail.com DISTINTTO DNI, mismo nombre, distintos datos
+    todos los operadores tienen para un mismo mail dos dnis distintos (mismo nom y ape)
+
+    SELECT DISTINCT OPERADOR_RECLAMO_DNI, OPERADOR_RECLAMO_NOMBRE, OPERADOR_RECLAMO_APELLIDO FROM gd_esquema.Maestra WHERE OPERADOR_RECLAMO_DNI IS NOT NULL
+    SELECT DISTINCT OPERADOR_RECLAMO_NOMBRE ,OPERADOR_RECLAMO_APELLIDO ,OPERADOR_RECLAMO_DNI ,OPERADOR_RECLAMO_TELEFONO ,OPERADOR_RECLAMO_DIRECCION ,OPERADOR_RECLAMO_MAIL ,OPERADOR_RECLAMO_FECHA_NAC FROM gd_esquema.Maestra
+	WHERE OPERADOR_RECLAMO_DNI IS NOT NULL AND OPERADOR_RECLAMO_DNI =4170422
+
+	WHERE OPERADOR_RECLAMO_DNI IS NOT NULL
+
+
+    	SELECT DISTINCT CUPON_NRO AS NUMERO,
+                        USUARIO_DNI,
+                        PEDIDO_NRO,
+                        CUPON_TIPO AS TIPO,
+                        CUPON_MONTO AS MONTO,
+                        CUPON_FECHA_ALTA AS ALTA,
+                        CUPON_FECHA_VENCIMIENTO AS VENCIMIENTO
+                        FROM gd_esquema.Maestra
+        WHERE CUPON_NRO IS NOT NULL
+        UNION
+        SELECT DISTINCT CUPON_RECLAMO_NRO AS NUMERO,
+                        USUARIO_DNI,
+                        PEDIDO_NRO,
+                        CUPON_RECLAMO_TIPO AS TIPO,
+                        CUPON_RECLAMO_MONTO AS MONTO,
+                        CUPON_RECLAMO_FECHA_ALTA AS ALTA,
+                        CUPON_RECLAMO_FECHA_VENCIMIENTO AS VENCIMIENTO
+                        FROM gd_esquema.Maestra
+        WHERE CUPON_RECLAMO_NRO IS NOT NULL
+
+        SELECT DISTINCT CUPON_RECLAMO_NRO
+                        FROM gd_esquema.Maestra
+        WHERE CUPON_RECLAMO_NRO IS NOT NULL
+
+        select * from new_model.CUPON_TIPO
+
+        EXEC borrar_todo
+
+
+
+
+    SELECT DISTINCT CUPON_NRO
+    FROM gd_esquema.Maestra
+    WHERE CUPON_NRO IS NOT NULL
+    UNION
+    SELECT DISTINCT CUPON_RECLAMO_NRO AS NUMERO
+    FROM gd_esquema.Maestra
+    WHERE CUPON_RECLAMO_NRO IS NOT NULL
+
+	SELECT DISTINCT 
+                RECLAMO_NRO,
+                (USUARIO_DNI),
+                PEDIDO_NRO,
+                (RECLAMO_TIPO),
+                (RECLAMO_ESTADO),
+                (OPERADOR_RECLAMO_DNI),
+                RECLAMO_FECHA,
+                RECLAMO_DESCRIPCION,
+                RECLAMO_FECHA_SOLUCION,
+                RECLAMO_SOLUCION,
+                RECLAMO_CALIFICACION  
+                FROM gd_esquema.Maestra
+	WHERE RECLAMO_NRO IS NOT NULL
+    
