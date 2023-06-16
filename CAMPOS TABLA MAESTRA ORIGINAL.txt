@@ -349,3 +349,8 @@ BEGIN
 END
 GO
 
+-- OPTIMIZACION PROCEDURES
+1) No es necesario ningun UNION en MIGRAR_PROVINCIAS
+2) Solo es necesario UNION de local - envio_mensajeria en MIGRAR_LOCALIDADES
+3)
+ 
